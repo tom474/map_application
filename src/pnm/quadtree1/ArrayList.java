@@ -106,7 +106,7 @@ public class ArrayList<E> implements List<E> {
     }
 
     /**
-     * Removes all of the elements from this list.
+     * Removes all the elements from this list.
      * The list will be empty after this call returns.
      */
     @Override
