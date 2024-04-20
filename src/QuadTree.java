@@ -2,40 +2,41 @@ class QuadTree {
     private static final int MAX_CAPACITY = 1000000;
     private final int level;
     private final List<Place> places;
-    private final Rectangle bounds;
+    private final int x, y, width, height;
     private final QuadTree[] children;
 
-    public QuadTree(int level, Rectangle bounds) {
+    public QuadTree(int level, int x, int y, int width, int height) {
         this.level = level;
-        this.bounds = bounds;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
         this.places = new ArrayList<>();
         this.children = new QuadTree[4];
     }
 
     private void split() {
-        int subWidth = bounds.width / 2;
-        int subHeight = bounds.height / 2;
-        int x = bounds.x;
-        int y = bounds.y;
+        int subWidth = width / 2;
+        int subHeight = height / 2;
 
-        children[0] = new QuadTree(level + 1, new Rectangle(x + subWidth, y, subWidth, subHeight));
-        children[1] = new QuadTree(level + 1, new Rectangle(x, y, subWidth, subHeight));
-        children[2] = new QuadTree(level + 1, new Rectangle(x, y + subHeight, subWidth, subHeight));
-        children[3] = new QuadTree(level + 1, new Rectangle(x + subWidth, y + subHeight, subWidth, subHeight));
+        children[0] = new QuadTree(level + 1, x + subWidth, y, subWidth, subHeight);
+        children[1] = new QuadTree(level + 1, x, y, subWidth, subHeight);
+        children[2] = new QuadTree(level + 1, x, y + subHeight, subWidth, subHeight);
+        children[3] = new QuadTree(level + 1, x + subWidth, y + subHeight, subWidth, subHeight);
 
         for (int i = 0; i < places.size(); i++) {
             Place place = places.get(i);
-            int index = getIndex(place.placeCoor);
+            int index = getIndex(place.x, place.y);
             children[index].places.add(place);
         }
         places.clear();
     }
 
-    private int getIndex(Point point) {
-        double verticalMidpoint = bounds.x + bounds.width / 2.0;
-        double horizontalMidpoint = bounds.y + bounds.height / 2.0;
-        boolean topQuadrant = (point.y < horizontalMidpoint);
-        boolean leftQuadrant = (point.x < verticalMidpoint);
+    private int getIndex(int px, int py) {
+        double verticalMidpoint = x + width / 2.0;
+        double horizontalMidpoint = y + height / 2.0;
+        boolean topQuadrant = (py < horizontalMidpoint);
+        boolean leftQuadrant = (px < verticalMidpoint);
 
         if (leftQuadrant) {
             return topQuadrant ? 1 : 2;
@@ -45,8 +46,8 @@ class QuadTree {
     }
 
     public void insert(Place place) {
-        if (!bounds.contains(place.placeCoor.x, place.placeCoor.y)) {
-            throw new IllegalArgumentException("Place " + place + " is out of the bounds of the quad tree");
+        if (!contains(place.x, place.y)) {
+            throw new IllegalArgumentException("Place is out of the bounds of the quad tree");
         }
 
         if (places.size() < MAX_CAPACITY && children[0] == null) {
@@ -55,13 +56,13 @@ class QuadTree {
             if (children[0] == null) {
                 split();
             }
-            int index = getIndex(place.placeCoor);
+            int index = getIndex(place.x, place.y);
             children[index].insert(place);
         }
     }
 
     public boolean delete(Place place) {
-        if (!bounds.contains(place.placeCoor.x, place.placeCoor.y)) {
+        if (!contains(place.x, place.y)) {
             return false;
         }
 
@@ -73,20 +74,13 @@ class QuadTree {
         }
 
         if (children[0] != null) {
-            int index = getIndex(place.placeCoor);
+            int index = getIndex(place.x, place.y);
             return children[index].delete(place);
         }
 
         return false;
     }
 
-    /**
-     * Adds a service to the specified place within the quad tree.
-     *
-     * @param place The place to which the service should be added.
-     * @param service The service to add.
-     * @return true if the service was added, false if the place does not exist or the service is already added.
-     */
     public boolean addService(Place place, ServiceType service) {
         if (findPlace(place)) {
             place.addService(service);
@@ -95,13 +89,6 @@ class QuadTree {
         return false;
     }
 
-    /**
-     * Removes a service from the specified place within the quad tree.
-     *
-     * @param place The place from which the service should be removed.
-     * @param service The service to remove.
-     * @return true if the service was removed, false if the place does not exist or the service was not offered.
-     */
     public boolean removeService(Place place, ServiceType service) {
         if (findPlace(place)) {
             place.removeService(service);
@@ -110,23 +97,10 @@ class QuadTree {
         return false;
     }
 
-    /**
-     * Finds a place within the quad tree.
-     *
-     * @param target The place to find.
-     * @return true if the place exists in the quad tree, false otherwise.
-     */
     private boolean findPlace(Place target) {
         return findPlaceHelper(target, this);
     }
 
-    /**
-     * Recursive helper method to find a place in the quad tree.
-     *
-     * @param target The place to find.
-     * @param node The current node of the quad tree being searched.
-     * @return true if the place is found, false otherwise.
-     */
     private boolean findPlaceHelper(Place target, QuadTree node) {
         if (node == null) {
             return false;
@@ -139,7 +113,7 @@ class QuadTree {
         }
 
         if (node.children[0] != null) {
-            int index = node.getIndex(target.placeCoor);
+            int index = node.getIndex(target.x, target.y);
             return findPlaceHelper(target, node.children[index]);
         }
 
@@ -147,13 +121,13 @@ class QuadTree {
     }
 
     public List<Place> query(Rectangle range, List<Place> found) {
-        if (!bounds.intersects(range)) {
+        if (!intersects(range.x, range.y, range.width, range.height)) {
             return found;
         }
 
         for (int i = 0; i < places.size(); i++) {
             Place place = places.get(i);
-            if (range.contains(place.placeCoor.x, place.placeCoor.y)) {
+            if (range.contains(place.x, place.y)) {
                 found.add(place);
             }
         }
@@ -167,25 +141,22 @@ class QuadTree {
         return found;
     }
 
-    public List<Place> boundedQuery(Point userLocation, double maxDistance, ServiceType serviceType) {
+    public List<Place> boundedQuery(int userX, int userY, double maxDistance, ServiceType serviceType) {
         int radius = (int) maxDistance;
-        Rectangle searchArea = new Rectangle(
-                userLocation.x - radius, userLocation.y - radius,
-                2 * radius, 2 * radius
-        );
+        Rectangle searchArea = new Rectangle(userX - radius, userY - radius, 2 * radius, 2 * radius);
         List<Place> results = query(searchArea, new ArrayList<>());
         ArrayList<Place> filteredResults = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
             Place place = results.get(i);
-            if (place.offersService(serviceType) && distance(userLocation, place.placeCoor) <= maxDistance) {
+            if (place.offersService(serviceType) && distance(userX, userY, place.x, place.y) <= maxDistance) {
                 filteredResults.add(place);
             }
         }
-        // Since no direct sorting, use selection sort for simplicity given the context
+        // Selection sort by distance for simplicity
         for (int i = 0; i < filteredResults.size() - 1; i++) {
             int minIdx = i;
             for (int j = i + 1; j < filteredResults.size(); j++) {
-                if (distance(userLocation, filteredResults.get(j).placeCoor) < distance(userLocation, filteredResults.get(minIdx).placeCoor)) {
+                if (distance(userX, userY, filteredResults.get(j).x, filteredResults.get(j).y) < distance(userX, userY, filteredResults.get(minIdx).x, filteredResults.get(minIdx).y)) {
                     minIdx = j;
                 }
             }
@@ -196,20 +167,16 @@ class QuadTree {
         return filteredResults;
     }
 
-
-    public List<Place> serviceQuery(Point userLocation, ServiceType serviceType, int k) {
+    public List<Place> serviceQuery(int userX, int userY, ServiceType serviceType, int k) {
         double largeSearchRadius = 10000;  // Arbitrary large radius
-        Rectangle searchArea = new Rectangle(
-                userLocation.x - (int)largeSearchRadius, userLocation.y - (int)largeSearchRadius,
-                (int)(2 * largeSearchRadius), (int)(2 * largeSearchRadius)
-        );
+        Rectangle searchArea = new Rectangle(userX - (int) largeSearchRadius, userY - (int) largeSearchRadius, (int) (2 * largeSearchRadius), (int) (2 * largeSearchRadius));
         List<Place> results = query(searchArea, new ArrayList<>());
-        MaxHeap maxHeap = new MaxHeap(k, userLocation.x, userLocation.y);
+        MaxHeap maxHeap = new MaxHeap(k, userX, userY);
 
         for (int i = 0; i < results.size(); i++) {
             Place place = results.get(i);
             if (place.offersService(serviceType)) {
-                int[] loc = new int[]{place.placeCoor.x, place.placeCoor.y};
+                int[] loc = new int[]{place.x, place.y};
                 maxHeap.offer(loc);
             }
         }
@@ -217,90 +184,66 @@ class QuadTree {
         ArrayList<Place> topKResults = new ArrayList<>();
         while (!maxHeap.isEmpty() && topKResults.size() < k) {
             int[] location = maxHeap.poll();
-            topKResults.add(new Place(new Point(location[0], location[1]), new ServiceType[]{serviceType})); // Simplified for context
+            topKResults.add(new Place(location[0], location[1])); // Simplified for context
         }
 
         return topKResults;
     }
 
-    private double distance(Point p1, Point p2) {
-        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-    }
-}
-
-
-class Point {
-    int x, y;
-
-    public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
+    private boolean contains(int px, int py) {
+        return px >= x && py >= y && px < x + width && py < y + height;
     }
 
-    public boolean isEqual(int x, int y) {
-        return this.x == x && this.y == y;
+    private boolean intersects(int otherX, int otherY, int otherWidth, int otherHeight) {
+        return !(otherX > x + width || otherX + otherWidth < x || otherY > y + height || otherY + otherHeight < y);
     }
-}
 
-enum ServiceType {
-    ATM, RESTAURANT, HOSPITAL, GAS_STATION, COFFEE_SHOP, GROCERY_STORE, PHARMACY, HOTEL, BANK, BOOK_STORE;
-
-    public static int size() {
-        return ServiceType.values().length;
+    private double distance(int x1, int y1, int x2, int y2) {
+        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
-}
 
-class Place {
-    protected Point placeCoor;
-    protected boolean[] services;  // Boolean array to track which services are offered
+    static class Place {
+        int x, y;
+        long services; // Bitmask for services
 
-    public Place(Point placeCoor, ServiceType[] servicesToAdd) {
-        this.placeCoor = placeCoor;
-        this.services = new boolean[ServiceType.size()];  // Initialize the boolean array for services
-        for (ServiceType service : servicesToAdd) {
-            addService(service);  // Add each service to the place
+        public Place(int x, int y) {
+            this.x = x;
+            this.y = y;
+            this.services = 0; // No services initially
+        }
+
+        public void addService(ServiceType service) {
+            services |= (1L << service.ordinal());
+        }
+
+        public void removeService(ServiceType service) {
+            services &= ~(1L << service.ordinal());
+        }
+
+        public boolean offersService(ServiceType service) {
+            return (services & (1L << service.ordinal())) != 0;
         }
     }
 
-    public boolean offersService(ServiceType service) {
-        return services[service.ordinal()];  // Return the service availability based on its ordinal
+    enum ServiceType {
+        ATM, RESTAURANT, HOSPITAL, GAS_STATION, COFFEE_SHOP, GROCERY_STORE, PHARMACY, HOTEL, BANK, BOOK_STORE;
     }
 
-    public void addService(ServiceType service) {
-        services[service.ordinal()] = true;  // Mark the service as offered
-    }
+    static class Rectangle {
+        int x, y, width, height;
 
-    public void removeService(ServiceType service) {
-        services[service.ordinal()] = false;  // Mark the service as not offered
-    }
-
-    public int[][] getServices() {
-        SimpleList serviceList = new SimpleList(ServiceType.size());  // Create a new simple list to collect services
-        for (ServiceType service : ServiceType.values()) {
-            if (offersService(service)) {
-                serviceList.add(new int[] {service.ordinal()});  // Add the service ordinal to the list
-            }
+        public Rectangle(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
         }
-        return serviceList.toArray();  // Convert the list of services to an array and return
+
+        public boolean contains(int px, int py) {
+            return px >= x && py >= y && px < x + width && py < y + height;
+        }
     }
 }
 
-class Rectangle {
-    int x, y;
-    int width, height;
 
-    public Rectangle(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-    }
 
-    public boolean contains(int x, int y) {
-        return x >= this.x && y >= this.y && x < this.x + this.width && y < this.y + this.height;
-    }
-
-    public boolean intersects(Rectangle other) {
-        return !(other.x > x + width || other.x + other.width < x || other.y > y + height || other.y + other.height < y);
-    }
-}

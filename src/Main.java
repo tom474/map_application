@@ -1,13 +1,13 @@
 import java.util.Random;
 
 public class Main {
-    private static final int NUM_POINTS = 1000000;  // Reduced for practicality
+    private static final int NUM_POINTS = 100000000;  // Reduced for practicality
     private static final int MAX_COORDINATE = 10000000; // Maximum coordinate value
+    public static Random random = new Random();
 
     public static void main(String[] args) {
         // Initialize the QuadTree with bounds large enough to contain all points
-        QuadTree quadTree = new QuadTree(0, new Rectangle(0, 0, MAX_COORDINATE, MAX_COORDINATE));
-        Random random = new Random();
+        QuadTree quadTree = new QuadTree(0, 0, 0, MAX_COORDINATE, MAX_COORDINATE);
 
         // Get the Java runtime
         Runtime runtime = Runtime.getRuntime();
@@ -23,9 +23,8 @@ public class Main {
         for (int i = 0; i < NUM_POINTS; i++) {
             int x = 10 + random.nextInt(MAX_COORDINATE - 10);
             int y = 10 + random.nextInt(MAX_COORDINATE - 10);
-            ServiceType[] serviceTypes = {generateRandomService()};
-            Point point = new Point(x, y);
-            Place place = new Place(point, serviceTypes);
+            QuadTree.Place place = new QuadTree.Place(x, y);
+            place.addService(generateRandomService());  // Assuming you add one random service to each place
             try {
                 quadTree.insert(place);
             } catch (IllegalArgumentException e) {
@@ -40,22 +39,23 @@ public class Main {
 
         // Insertion of an additional place
         long insertStartTime = System.currentTimeMillis();
-        Point additionalPoint = new Point(234133, 517823);
-        Place additionalPlace = new Place(additionalPoint, new ServiceType[]{ServiceType.ATM});
+        QuadTree.Place additionalPlace = new QuadTree.Place(234133, 517823);
+        additionalPlace.addService(QuadTree.ServiceType.ATM);
         quadTree.insert(additionalPlace);
         long insertEndTime = System.currentTimeMillis();
         System.out.println("Insertion of 1 place completed in " + (insertEndTime - insertStartTime) + " ms");
 
         // Querying
         long queryStartTime = System.currentTimeMillis();
-        Rectangle queryRectangle = new Rectangle(500000, 500000, 200000, 200000);
-        List<Place> foundPlaces = quadTree.query(queryRectangle, new ArrayList<>());
+        QuadTree.Rectangle queryRectangle = new QuadTree.Rectangle(500000, 500000, 200000, 200000);
+        List<QuadTree.Place> foundPlaces = quadTree.query(queryRectangle, new ArrayList<>());
         long queryEndTime = System.currentTimeMillis();
         System.out.println("Querying " + foundPlaces.size() + " places completed in " + (queryEndTime - queryStartTime) + " ms");
     }
 
-    private static ServiceType generateRandomService() {
-        Random random = new Random();
-        return ServiceType.values()[random.nextInt(ServiceType.values().length)];
+    private static QuadTree.ServiceType generateRandomService() {
+        return QuadTree.ServiceType.values()[random.nextInt(QuadTree.ServiceType.values().length)];
     }
+
+    // Inner classes like QuadTree, Place, ServiceType, and Rectangle should be appropriately nested here or as separate classes within the file, as per your current structure.
 }

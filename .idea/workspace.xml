@@ -6,17 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="141b3c40-7381-4c12-bd1f-ee9a761d0f19" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ArrayList.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ArrayList.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/Map2D.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/Map2DADT.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/Map2DTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/MaxHeap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MaxHeap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/SimpleList.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleList.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/kdtree1/SimpleQueue.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleQueue.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/quadtree1/ArrayList.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ArrayList.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/quadtree1/List.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/List.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/quadtree1/QuadTree.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/QuadTree.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pnm/quadtree1/QuadTreeTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/QuadTreeTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/QuadTree.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/QuadTree.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,37 +40,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Main.executor": "Run",
-    "Application.Map2DTest.executor": "Run",
-    "Application.QuadTreePerformanceTest.executor": "Run",
-    "Application.QuadTreeTest.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "final",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/pnm/Developer/projects/map_application/src/pnm/quadtree1",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "SDKs",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Map2DTest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.QuadTreePerformanceTest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.QuadTreeTest.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;final&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/pnm/Developer/projects/map_application/src/pnm/quadtree1&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/pnm/quadtree1" />
       <recent name="$PROJECT_DIR$/src/pnm/kdtree1" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.QuadTreeTest">
+  <component name="RunManager" selected="Application.Main">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Main" />
       <module name="map_application" />
@@ -127,10 +119,10 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="Application.QuadTreeTest" />
         <item itemvalue="Application.QuadTreePerformanceTest" />
         <item itemvalue="Application.Map2DTest" />
-        <item itemvalue="Application.Main" />
         <item itemvalue="Application.QuadTreeTest" />
       </list>
     </recent_temporary>
@@ -156,6 +148,8 @@
       <workItem from="1713337720429" duration="2237000" />
       <workItem from="1713340234722" duration="6000" />
       <workItem from="1713340250387" duration="21551000" />
+      <workItem from="1713581985069" duration="1673000" />
+      <workItem from="1713583712360" duration="2974000" />
     </task>
     <servers />
   </component>
