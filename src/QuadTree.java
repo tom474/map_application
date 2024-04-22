@@ -1,9 +1,9 @@
 class QuadTree {
-    private static final int MAX_CAPACITY = 1000000;
+    private static final int MAX_CAPACITY = 10_000_000;
     private final int level;
     private final List<Place> places;
     private final Rectangle bounds;
-    private final QuadTree[] children;
+    private QuadTree[] children;
 
     public QuadTree(int level, Rectangle bounds) {
         this.level = level;
@@ -18,24 +18,36 @@ class QuadTree {
         int x = bounds.x;
         int y = bounds.y;
 
-        children[0] = new QuadTree(level + 1, new Rectangle(x + subWidth, y, subWidth, subHeight));
-        children[1] = new QuadTree(level + 1, new Rectangle(x, y, subWidth, subHeight));
-        children[2] = new QuadTree(level + 1, new Rectangle(x, y + subHeight, subWidth, subHeight));
-        children[3] = new QuadTree(level + 1, new Rectangle(x + subWidth, y + subHeight, subWidth, subHeight));
+        // Initially, do not allocate the QuadTree objects.
+        children = new QuadTree[4]; // Initialize a children array but do not create new QuadTrees yet.
 
+        // Allocate children only when needed during the splitting process.
         for (int i = 0; i < places.size(); i++) {
             Place place = places.get(i);
-            int index = getIndex(place.placeCoor);
-            children[index].places.add(place);
+            int index = getIndex(place.x, place.y);
+
+            // Create the child node when the first relevant place is found
+            if (children[index] == null) {
+                Rectangle newBounds = switch (index) {
+                    case 0 -> new Rectangle(x + subWidth, y, subWidth, subHeight);
+                    case 1 -> new Rectangle(x, y, subWidth, subHeight);
+                    case 2 -> new Rectangle(x, y + subHeight, subWidth, subHeight);
+                    case 3 -> new Rectangle(x + subWidth, y + subHeight, subWidth, subHeight);
+                    default -> null;
+                };
+                children[index] = new QuadTree(level + 1, newBounds);
+            }
+            children[index].insert(place);
         }
-        places.clear();
+        places.clear(); // Clear the places as they are now distributed among the children
     }
 
-    private int getIndex(Point point) {
-        double verticalMidpoint = bounds.x + bounds.width / 2.0;
-        double horizontalMidpoint = bounds.y + bounds.height / 2.0;
-        boolean topQuadrant = (point.y < horizontalMidpoint);
-        boolean leftQuadrant = (point.x < verticalMidpoint);
+
+    private int getIndex(int x, int y) {
+        int verticalMidpoint = bounds.x + bounds.width / 2;
+        int horizontalMidpoint = bounds.y + bounds.height / 2;
+        boolean topQuadrant = (y < horizontalMidpoint);
+        boolean leftQuadrant = (x < verticalMidpoint);
 
         if (leftQuadrant) {
             return topQuadrant ? 1 : 2;
@@ -45,7 +57,7 @@ class QuadTree {
     }
 
     public void insert(Place place) {
-        if (!bounds.contains(place.placeCoor.x, place.placeCoor.y)) {
+        if (!bounds.contains(place.x, place.y)) {
             throw new IllegalArgumentException("Place " + place + " is out of the bounds of the quad tree");
         }
 
@@ -55,13 +67,13 @@ class QuadTree {
             if (children[0] == null) {
                 split();
             }
-            int index = getIndex(place.placeCoor);
+            int index = getIndex(place.x, place.y);
             children[index].insert(place);
         }
     }
 
     public boolean delete(Place place) {
-        if (!bounds.contains(place.placeCoor.x, place.placeCoor.y)) {
+        if (!bounds.contains(place.x, place.y)) {
             return false;
         }
 
@@ -73,7 +85,7 @@ class QuadTree {
         }
 
         if (children[0] != null) {
-            int index = getIndex(place.placeCoor);
+            int index = getIndex(place.x, place.y);
             return children[index].delete(place);
         }
 
@@ -83,13 +95,13 @@ class QuadTree {
     /**
      * Adds a service to the specified place within the quad tree.
      *
-     * @param place The place to which the service should be added.
-     * @param service The service to add.
+     * @param place     The place to which the service should be added.
+     * @param serviceId The service to add.
      * @return true if the service was added, false if the place does not exist or the service is already added.
      */
-    public boolean addService(Place place, ServiceType service) {
+    public boolean addService(Place place, int serviceId) {
         if (findPlace(place)) {
-            place.addService(service);
+            place.addService(serviceId); // Directly use the service ID which is an int
             return true;
         }
         return false;
@@ -98,13 +110,13 @@ class QuadTree {
     /**
      * Removes a service from the specified place within the quad tree.
      *
-     * @param place The place from which the service should be removed.
-     * @param service The service to remove.
+     * @param place     The place from which the service should be removed.
+     * @param serviceId The service to remove.
      * @return true if the service was removed, false if the place does not exist or the service was not offered.
      */
-    public boolean removeService(Place place, ServiceType service) {
+    public boolean removeService(Place place, int serviceId) {
         if (findPlace(place)) {
-            place.removeService(service);
+            place.removeService(serviceId); // Directly use the service ID which is an int
             return true;
         }
         return false;
@@ -124,7 +136,7 @@ class QuadTree {
      * Recursive helper method to find a place in the quad tree.
      *
      * @param target The place to find.
-     * @param node The current node of the quad tree being searched.
+     * @param node   The current node of the quad tree being searched.
      * @return true if the place is found, false otherwise.
      */
     private boolean findPlaceHelper(Place target, QuadTree node) {
@@ -139,7 +151,7 @@ class QuadTree {
         }
 
         if (node.children[0] != null) {
-            int index = node.getIndex(target.placeCoor);
+            int index = node.getIndex(target.x, target.y);
             return findPlaceHelper(target, node.children[index]);
         }
 
@@ -153,7 +165,7 @@ class QuadTree {
 
         for (int i = 0; i < places.size(); i++) {
             Place place = places.get(i);
-            if (range.contains(place.placeCoor.x, place.placeCoor.y)) {
+            if (range.contains(place.x, place.y)) {
                 found.add(place);
             }
         }
@@ -166,123 +178,50 @@ class QuadTree {
 
         return found;
     }
-
-    public List<Place> boundedQuery(Point userLocation, double maxDistance, ServiceType serviceType) {
-        int radius = (int) maxDistance;
-        Rectangle searchArea = new Rectangle(
-                userLocation.x - radius, userLocation.y - radius,
-                2 * radius, 2 * radius
-        );
-        List<Place> results = query(searchArea, new ArrayList<>());
-        ArrayList<Place> filteredResults = new ArrayList<>();
-        for (int i = 0; i < results.size(); i++) {
-            Place place = results.get(i);
-            if (place.offersService(serviceType) && distance(userLocation, place.placeCoor) <= maxDistance) {
-                filteredResults.add(place);
-            }
-        }
-        // Since no direct sorting, use selection sort for simplicity given the context
-        for (int i = 0; i < filteredResults.size() - 1; i++) {
-            int minIdx = i;
-            for (int j = i + 1; j < filteredResults.size(); j++) {
-                if (distance(userLocation, filteredResults.get(j).placeCoor) < distance(userLocation, filteredResults.get(minIdx).placeCoor)) {
-                    minIdx = j;
-                }
-            }
-            Place temp = filteredResults.get(minIdx);
-            filteredResults.set(minIdx, filteredResults.get(i));
-            filteredResults.set(i, temp);
-        }
-        return filteredResults;
-    }
-
-
-    public List<Place> serviceQuery(Point userLocation, ServiceType serviceType, int k) {
-        double largeSearchRadius = 10000;  // Arbitrary large radius
-        Rectangle searchArea = new Rectangle(
-                userLocation.x - (int)largeSearchRadius, userLocation.y - (int)largeSearchRadius,
-                (int)(2 * largeSearchRadius), (int)(2 * largeSearchRadius)
-        );
-        List<Place> results = query(searchArea, new ArrayList<>());
-        MaxHeap maxHeap = new MaxHeap(k, userLocation.x, userLocation.y);
-
-        for (int i = 0; i < results.size(); i++) {
-            Place place = results.get(i);
-            if (place.offersService(serviceType)) {
-                int[] loc = new int[]{place.placeCoor.x, place.placeCoor.y};
-                maxHeap.offer(loc);
-            }
-        }
-
-        ArrayList<Place> topKResults = new ArrayList<>();
-        while (!maxHeap.isEmpty() && topKResults.size() < k) {
-            int[] location = maxHeap.poll();
-            topKResults.add(new Place(new Point(location[0], location[1]), new ServiceType[]{serviceType})); // Simplified for context
-        }
-
-        return topKResults;
-    }
-
-    private double distance(Point p1, Point p2) {
-        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-    }
 }
 
+class ServiceType {
+    public static final int ATM = 0;
+    public static final int RESTAURANT = 1;
+    public static final int HOSPITAL = 2;
+    public static final int POLICE_STATION = 3;
+    public static final int FIRE_STATION = 4;
+    public static final int GAS_STATION = 5;
+    public static final int GROCERY_STORE = 6;
+    public static final int PHARMACY = 7;
+    public static final int POST_OFFICE = 8;
+    public static final int SCHOOL = 9;
 
-class Point {
-    int x, y;
-
-    public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public boolean isEqual(int x, int y) {
-        return this.x == x && this.y == y;
-    }
+    public static final int NUM_SERVICES = 9; // Update this count based on actual services
 }
 
-enum ServiceType {
-    ATM, RESTAURANT, HOSPITAL, GAS_STATION, COFFEE_SHOP, GROCERY_STORE, PHARMACY, HOTEL, BANK, BOOK_STORE;
-
-    public static int size() {
-        return ServiceType.values().length;
-    }
-}
 
 class Place {
-    protected Point placeCoor;
-    protected boolean[] services;  // Boolean array to track which services are offered
+    int x, y; // Coordinates
+    int services; // Bitmask for services
 
-    public Place(Point placeCoor, ServiceType[] servicesToAdd) {
-        this.placeCoor = placeCoor;
-        this.services = new boolean[ServiceType.size()];  // Initialize the boolean array for services
-        for (ServiceType service : servicesToAdd) {
-            addService(service);  // Add each service to the place
+    public Place(int x, int y) {
+        this.x = x;
+        this.y = y;
+        this.services = 0;
+    }
+
+    public void addService(int serviceId) {
+        if (serviceId >= 0 && serviceId < ServiceType.NUM_SERVICES) {
+            services |= (1 << serviceId);
+        } else {
+            throw new IllegalArgumentException("Invalid service ID: " + serviceId);
         }
     }
 
-    public boolean offersService(ServiceType service) {
-        return services[service.ordinal()];  // Return the service availability based on its ordinal
-    }
-
-    public void addService(ServiceType service) {
-        services[service.ordinal()] = true;  // Mark the service as offered
-    }
-
-    public void removeService(ServiceType service) {
-        services[service.ordinal()] = false;  // Mark the service as not offered
-    }
-
-    public int[][] getServices() {
-        SimpleList serviceList = new SimpleList(ServiceType.size());  // Create a new simple list to collect services
-        for (ServiceType service : ServiceType.values()) {
-            if (offersService(service)) {
-                serviceList.add(new int[] {service.ordinal()});  // Add the service ordinal to the list
-            }
+    public void removeService(int serviceId) {
+        if (serviceId >= 0 && serviceId < ServiceType.NUM_SERVICES) {
+            services &= ~(1 << serviceId);
+        } else {
+            throw new IllegalArgumentException("Invalid service ID: " + serviceId);
         }
-        return serviceList.toArray();  // Convert the list of services to an array and return
     }
+
 }
 
 class Rectangle {
