@@ -32,6 +32,33 @@ class QuadTree {
         places.clear();
     }
 
+    private void split2() {
+        int subWidth = width / 2;
+        int subHeight = height / 2;
+
+        // Child quadtrees are not instantiated here.
+
+        for (int i = 0; i < places.size(); i++) {
+            Place place = places.get(i);
+            int index = getIndex(place.x, place.y);
+
+            // Instantiate child QuadTree only if necessary
+            if (children[index] == null) {
+                if (index == 0) {
+                    children[0] = new QuadTree(level + 1, x + subWidth, y, subWidth, subHeight);
+                } else if (index == 1) {
+                    children[1] = new QuadTree(level + 1, x, y, subWidth, subHeight);
+                } else if (index == 2) {
+                    children[2] = new QuadTree(level + 1, x, y + subHeight, subWidth, subHeight);
+                } else if (index == 3) {
+                    children[3] = new QuadTree(level + 1, x + subWidth, y + subHeight, subWidth, subHeight);
+                }
+            }
+            children[index].places.add(place);
+        }
+        places.clear();
+    }
+
     private int getIndex(int px, int py) {
         double verticalMidpoint = x + width / 2.0;
         double horizontalMidpoint = y + height / 2.0;
@@ -54,7 +81,7 @@ class QuadTree {
             places.add(place);
         } else {
             if (children[0] == null) {
-                split();
+                split2();
             }
             int index = getIndex(place.x, place.y);
             children[index].insert(place);
@@ -134,7 +161,9 @@ class QuadTree {
 
         if (children[0] != null) {
             for (QuadTree child : children) {
-                child.query(range, found);
+                if (child.intersects(child.getX(), child.getY(), child.getWidth(), child.getHeight())) {
+                    child.query(range, found);
+                }
             }
         }
 
@@ -202,6 +231,34 @@ class QuadTree {
         return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
 
+    public int getLevel() {
+        return level;
+    }
+
+    public List<Place> getPlaces() {
+        return places;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public QuadTree[] getChildren() {
+        return children;
+    }
+
     static class Place {
         int x, y;
         long services; // Bitmask for services
@@ -241,6 +298,38 @@ class QuadTree {
 
         public boolean contains(int px, int py) {
             return px >= x && py >= y && px < x + width && py < y + height;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public int getWidth() {
+            return width;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public void setHeight(int height) {
+            this.height = height;
         }
     }
 }
